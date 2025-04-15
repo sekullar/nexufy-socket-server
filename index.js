@@ -9,7 +9,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://nexufy-socket-server.onrender.com", // PROD için domainini yazarsın
+    origin: "https://nexufy-socket-server.onrender.com:10000", // PROD için domainini yazarsın
     methods: ["GET", "POST"]
   },
   path: "/api/signal"
