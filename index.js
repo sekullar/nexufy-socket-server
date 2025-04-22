@@ -41,7 +41,7 @@ io.on("connection", (socket) => {
 
     // Kullanıcının odada olduğunu Supabase'e kaydet
     supabase
-      .from('users') // users tablosu
+      .from('soundChannelInfo') // users tablosu
       .upsert([{ socket_id: socket.id, room_id: roomId, status: 'connected' }]) // kullanıcının odada aktif olduğunu kaydet
       .then(response => {
         if (response.error) console.error('Supabase Hata:', response.error);
@@ -56,7 +56,7 @@ io.on("connection", (socket) => {
 
       // Disconnect olduğunda Supabase'e kullanıcıyı sil
       const { error } = await supabase
-        .from("users")
+        .from("soundChannelInfo")
         .delete()
         .eq("socket_id", socket.id); // kullanıcının socket_id'sine göre sil
 
