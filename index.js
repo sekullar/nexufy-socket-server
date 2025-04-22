@@ -2,6 +2,12 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+const { createClient } = require("@supabase/supabase-js");
+
+// Supabase bağlantısı
+const supabaseUrl = "https://cwvgzpwabyisqzyflazf.supabase.co"; // Supabase URL'inizi buraya ekleyin
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3dmd6cHdhYnlpc3F6eWZsYXpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI0NTE1NDAsImV4cCI6MjA1ODAyNzU0MH0.moiPwbzhxyFlSbxQvAxT_x2MhLr7NIZmEg4jzfySe7I"; // Supabase anon public key'inizi buraya ekleyin
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const app = express();
 app.use(cors());
@@ -33,11 +39,37 @@ io.on("connection", (socket) => {
 
     socket.to(roomId).emit("user-joined", socket.id);
 
+    // Kullanıcının odada olduğunu Supabase'e kaydet
+    supabase
+      .from('users') // users tablosu
+      .upsert([{ socket_id: socket.id, room_id: roomId, status: 'connected' }]) // kullanıcının odada aktif olduğunu kaydet
+      .then(response => {
+        if (response.error) console.error('Supabase Hata:', response.error);
+        else console.log('Kullanıcı Supabase\'e kaydedildi');
+      });
+
     // Odada disconnect olunca diziden çıkar
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       console.log("❌ Koptu:", socket.id);
       rooms[roomId] = rooms[roomId]?.filter((id) => id !== socket.id);
       socket.to(roomId).emit("user-left", socket.id);
+
+      // Disconnect olduğunda Supabase'e kullanıcıyı sil
+      const { error } = await supabase
+        .from("users")
+        .delete()
+        .eq("socket_id", socket.id); // kullanıcının socket_id'sine göre sil
+
+      if (error) {
+        console.log("Supabase hata:", error);
+      } else {
+        console.log("Kullanıcı disconnect olarak silindi.");
+      }
+
+      // Oda boşsa, odadaki son kişi çıkarsa başka işlem yapılabilir
+      if (rooms[roomId].length === 0) {
+        console.log(`Oda ${roomId} tamamen boş, işlem yapılabilir.`);
+      }
     });
   });
 
