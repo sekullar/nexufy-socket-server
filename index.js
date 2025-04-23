@@ -15,7 +15,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://nexufy.vercel.app", // prod adresin
+    origin: "https://nexufy.vercel.app", // prod adresi
     methods: ["GET", "POST"],
   },
   path: "/api/signal",
@@ -39,14 +39,7 @@ io.on("connection", (socket) => {
 
     socket.to(roomId).emit("user-joined", socket.id);
 
-    // Kullanıcının odada olduğunu Supabase'e kaydet
-    supabase
-      .from('soundChannelInfo') // users tablosu
-      .upsert([{ socket_id: socket.id, room_id: roomId, status: 'connected' }]) // kullanıcının odada aktif olduğunu kaydet
-      .then(response => {
-        if (response.error) console.error('Supabase Hata:', response.error);
-        else console.log('Kullanıcı Supabase\'e kaydedildi');
-      });
+    
 
     // Odada disconnect olunca diziden çıkar
     socket.on("disconnect", async () => {
