@@ -38,9 +38,11 @@ io.on("connection", (socket) => {
 
     socket.to(roomId).emit("user-joined", socket.id);
 
-    socket.on("ping-from-client", () => {
-      socket.emit("pong-from-server");
+    socket.on("ping-from-client", (data) => {
+      console.log("📡 Ping alındı:", data.time);
+      socket.emit("pong-from-server", { time: data.time });
     });
+    
     
 
     socket.on("disconnect", async () => {
