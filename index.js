@@ -24,6 +24,13 @@ const io = new Server(server, {
 const rooms = {}; // odaId -> [socketId]
 
 io.on("connection", (socket) => {
+  socket.on("ping-check", (timestamp) => {
+    socket.emit("pong-reply", timestamp);
+  });
+});
+
+
+io.on("connection", (socket) => {
   console.log("🔌 Bağlanan:", socket.id);
 
   socket.on("join-room", (roomId) => {
@@ -37,13 +44,7 @@ io.on("connection", (socket) => {
     socket.emit("all-users", otherUsers);
 
     socket.to(roomId).emit("user-joined", socket.id);
-
-    socket.on("ping-from-client", (data) => {
-      console.log("📡 Ping alındı:", data.time);
-      socket.emit("pong-from-server", { time: data.time });
-    });
-    
-    
+  
 
     socket.on("disconnect", async () => {
       console.log("❌ Koptu:", socket.id);
