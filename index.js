@@ -33,21 +33,21 @@ io.on("connection", (socket) => {
     if (!rooms[roomId]) rooms[roomId] = [];
     rooms[roomId].push(socket.id);
 
-    // Oda içindeki diğer kullanıcılara haber ver
     const otherUsers = rooms[roomId].filter((id) => id !== socket.id);
     socket.emit("all-users", otherUsers);
 
     socket.to(roomId).emit("user-joined", socket.id);
 
+    socket.on("ping-from-client", () => {
+      socket.emit("pong-from-server");
+    });
     
 
-    // Odada disconnect olunca diziden çıkar
     socket.on("disconnect", async () => {
       console.log("❌ Koptu:", socket.id);
       rooms[roomId] = rooms[roomId]?.filter((id) => id !== socket.id);
       socket.to(roomId).emit("user-left", socket.id);
 
-      // Disconnect olduğunda Supabase'e kullanıcıyı sil
       const { error } = await supabase
         .from("soundChannelInfo")
         .delete()
@@ -59,24 +59,20 @@ io.on("connection", (socket) => {
         console.log("Kullanıcı disconnect olarak silindi.");
       }
 
-      // Oda boşsa, odadaki son kişi çıkarsa başka işlem yapılabilir
       if (rooms[roomId].length === 0) {
         console.log(`Oda ${roomId} tamamen boş, işlem yapılabilir.`);
       }
     });
   });
 
-  // OFFER -> Hedefe gönder
   socket.on("offer", ({ target, offer }) => {
     io.to(target).emit("offer", { from: socket.id, offer });
   });
 
-  // ANSWER -> Hedefe gönder
   socket.on("answer", ({ target, answer }) => {
     io.to(target).emit("answer", { from: socket.id, answer });
   });
 
-  // ICE CANDIDATE -> Hedefe gönder
   socket.on("candidate", ({ target, candidate }) => {
     io.to(target).emit("candidate", { from: socket.id, candidate });
   });
