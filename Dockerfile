@@ -1,15 +1,20 @@
-# Node.js için temel imaj
+# Base image
 FROM node:16
 
-# Çalışma dizini oluşturuluyor
+# Set working directory
 WORKDIR /app
 
-# package.json ve package-lock.json dosyalarını kopyala ve bağımlılıkları yükle
-COPY package.json package-lock.json ./
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
 RUN npm install
 
-# Uygulama dosyalarını kopyala
+# Copy the rest of the application
 COPY . .
 
-# Uygulamayı başlat
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Start the application
 CMD ["npm", "start"]
